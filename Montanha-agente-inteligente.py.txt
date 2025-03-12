@@ -1,0 +1,97 @@
+import random
+import matplotlib.pyplot as plt
+
+class GameAgent:
+    def __init__(self, difficulty="médio"):
+        self.difficulty = difficulty
+        self.max_attempts, self.secret_number = self.set_difficulty()
+        self.attempts = 0
+        self.state = "Esperando tentativa"
+        self.history = []
+
+    def set_difficulty(self):
+        if self.difficulty == "fácil":
+            return 10, random.randint(1, 50)
+        elif self.difficulty == "médio":
+            return 7, random.randint(1, 100)
+        elif self.difficulty == "difícil":
+            return 5, random.randint(1, 200)
+        else:
+            raise ValueError("Dificuldade inválida. Escolha entre 'fácil', 'médio' ou 'difícil'.")
+
+    def make_guess(self, guess):
+        self.attempts += 1
+        self.history.append(guess)
+        
+        if guess == self.secret_number:
+            self.state = "Acertou!"
+            return "Parabéns! Você acertou o número."
+        elif self.attempts >= self.max_attempts:
+            self.state = "Fim do jogo"
+            return f"Game Over! O número era {self.secret_number}."
+        elif guess < self.secret_number:
+            self.state = "Tentativa errada (muito baixo)"
+            return "O número é maior. Tente novamente."
+        else:
+            self.state = "Tentativa errada (muito alto)"
+            return "O número é menor. Tente novamente."
+
+    # --- PARTE 3: MELHORIAS NO AGENTE ---
+    def show_history(self):
+        if not self.history:
+            return "Nenhuma tentativa foi feita ainda."
+        return "\n".join(f"Tentativa {i + 1}: {guess}" for i, guess in enumerate(self.history))
+
+    def give_hint(self):
+        if not self.history:
+            return "Tente um número no meio do intervalo."
+        
+        last_guess = self.history[-1]
+        difference = abs(self.secret_number - last_guess)
+        
+        if difference > 50:
+            return "Você está muito longe! Tente um número muito maior ou menor."
+        elif difference > 20:
+            return "Você está longe. Ajuste seu próximo palpite consideravelmente."
+        elif difference > 10:
+            return "Você está perto, mas ainda precisa ajustar um pouco."
+        else:
+            return "Você está muito perto! Ajuste seu palpite levemente."
+    # --- FIM DA PARTE 3 ---
+
+def plot_attempts(agent):
+    plt.figure(figsize=(8, 5))
+    plt.plot(range(1, len(agent.history) + 1), agent.history, marker='o', linestyle='-')
+    plt.axhline(y=agent.secret_number, color='r', linestyle='--', label='Número Secreto')
+    plt.xlabel("Tentativas")
+    plt.ylabel("Valor do Palpite")
+    plt.title("Evolução das Tentativas do Jogador")
+    plt.legend()
+    plt.show()
+
+def main():
+    print("Bem-vindo ao Jogo de Adivinhação!")
+    difficulty = input("Escolha a dificuldade (fácil, médio, difícil): ").lower()
+    
+    try:
+        agent = GameAgent(difficulty=difficulty)
+    except ValueError as e:
+        print(e)
+        return
+    
+    print(f"Você tem {agent.max_attempts} tentativas para adivinhar o número secreto.")
+
+    while agent.state not in ["Acertou!", "Fim do jogo"]:
+        try:
+            guess = int(input("Digite um número: "))
+            print(agent.make_guess(guess))
+            print(agent.give_hint())
+            print("Histórico de tentativas:")
+            print(agent.show_history())
+        except ValueError:
+            print("Entrada inválida. Digite um número inteiro.")
+
+    plot_attempts(agent)
+
+if __name__ == "__main__":
+    main()
